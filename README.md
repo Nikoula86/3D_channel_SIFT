@@ -12,3 +12,16 @@ This algorithm applies SIFT two consecutive times.
   - find features and match them
   - applies theYZ homography the the YZ slice of the full stack (upon resampling to match resolution of the max proj)
   - downsample registered slice to match original resolution
+
+Example:
+"
+fileStruct = 'testSample/ch*_ill00.tif'
+    
+print('\nSOURCE FOLDER:\n'+fileStruct+'\n')
+raw,reg=register_data( fileStruct, shape=(200,2048,2048),
+                       checkMemXY=False, checkMemYZ=False, 
+                       saveXY=False, saveYZ=True,
+                       visualXY=False, visualYZ=False,
+                       supsampling=4 )
+
+"

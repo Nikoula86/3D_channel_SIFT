@@ -335,10 +335,10 @@ def compute_MIP_YZ(stacks, axID, fileStruct,
 
 def register_data(fileStruct, shape,
                   saveXY=False, visualXY=False, checkMemXY=True,
-                  saveYZ=True, visualYZ=False, checkMemYZ=True, upsampling=4):
+                  saveYZ=True, visualYZ=False, checkMemYZ=True, Zupsampling=4):
     rawData,axID = load_images(fileStruct,shape)
     regData = compute_MIP_XY(rawData,axID,fileStruct,saveXY,visualXY,checkMemXY)
-    regData = compute_MIP_YZ(regData,axID,fileStruct,saveYZ,visualYZ,checkMemYZ,upsampling=upsampling)
+    regData = compute_MIP_YZ(regData,axID,fileStruct,saveYZ,visualYZ,checkMemYZ,upsampling=Zupsampling)
     return (rawData, regData)
 
 #%%
@@ -352,7 +352,7 @@ if __name__=='__main__':
                               checkMemXY=False, checkMemYZ=False, 
                               saveXY=False, saveYZ=True,
                               visualXY=False, visualYZ=False,
-                              upsampling=4 )
+                              Zupsampling=4 )
 
 
 
