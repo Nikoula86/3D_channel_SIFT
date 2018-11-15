@@ -15,7 +15,7 @@ This algorithm applies SIFT two consecutive times.
 
 Example:
 
-'''
+```
 fileStruct = 'testSample/ch*_ill00.tif'
     
 print('\nSOURCE FOLDER:\n'+fileStruct+'\n')
@@ -26,4 +26,4 @@ raw,reg=register_data( fileStruct, shape=(200,2048,2048),
                        visualXY=False, visualYZ=False,
                        supsampling=4 )
 
-'''
+```
