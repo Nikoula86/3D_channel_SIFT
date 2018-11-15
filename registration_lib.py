@@ -285,11 +285,17 @@ def XY_register_stacks(stacks,h,fileStruct,save=False):
 def YZ_register_stacks(stacks,h,fileStruct,upsampling=4,save=True):
     print('Registering stacks in YZ...')
     imgsReg = 0*stacks
-    height,width = stacks[0,...,0].shape
-    for i in tqdm( range(stacks.shape[-1]) ):
+    if len(stacks.shape)==4:
+        height,width = stacks[0,...,0].shape
+        for i in tqdm( range(stacks.shape[-1]) ):
+            for j in range(len(h)):
+                tmp = resize_array(stacks[j,...,i],upsampling=upsampling)
+                imgsReg[j,...,i] = cv2.warpPerspective(tmp,h[j],(width,upsampling*height))[::upsampling]
+    elif(len(stacks.shape)==3):
+        height,width = stacks[0,...].shape        
         for j in range(len(h)):
-            tmp = resize_array(stacks[j,...,i],upsampling=upsampling)
-            imgsReg[j,...,i] = cv2.warpPerspective(tmp,h[j],(width,upsampling*height))[::upsampling]
+            tmp = resize_array(stacks[j,...],upsampling=upsampling)
+            imgsReg[j,...] = cv2.warpPerspective(tmp,h[j],(width,upsampling*height))[::upsampling]
     if save:
         print('\nSaving YZ-registered stacks...')
         name = (fileStruct.split('/')[-1].split('.')[0]+'_YZ.tif')
@@ -324,7 +330,7 @@ def compute_MIP_YZ(stacks, axID, fileStruct,
     h = compute_homography(matches,kps)
     del mips,kps,descs,matches
     save_homography(h,'YZ_homography.npz',fileStruct)
-    regStack = YZ_register_stacks(stacks,h,fileStruct,save,upsampling)
+    regStack = YZ_register_stacks(stacks,h,fileStruct,upsampling=upsampling,save=save)
     return regStack
 
 def register_data(fileStruct, shape,
@@ -343,7 +349,10 @@ if __name__=='__main__':
     for fileStruct in fileStructs:
         print('\nSOURCE FOLDER:\n'+fileStruct+'\n')
         raw,reg=register_data( fileStruct, shape=(200,2048,2048),
-                              checkMemXY=False, checkMemYZ=False )
+                              checkMemXY=False, checkMemYZ=False, 
+                              saveXY=False, saveYZ=True,
+                              visualXY=False, visualYZ=False,
+                              upsampling=4 )
 
 
 
