@@ -255,13 +255,13 @@ def compute_homography(matches,kps):
 #%%
     
 def save_homography(h,name,path):
-    basedir = '/'+os.path.join(*path.split('/')[:-1])+'/Registered'
+    basedir = os.path.join(*path.split('/')[:-1])+'/Registered'
     if not os.path.exists(basedir):
         os.mkdir(basedir)
     np.savez(basedir+'/'+fileStruct.split('/')[-1].split('.')[0]+'_'+name,h=h)
 
 def save_registered_stacks(stacks,name,path):
-    basedir = '/'+os.path.join(*path.split('/')[:-1])+'/Registered'
+    basedir = os.path.join(*path.split('/')[:-1])+'/Registered'
     if not os.path.exists(basedir):
         os.mkdir(basedir)
     for i in tqdm(range(stacks.shape[0])):
@@ -282,14 +282,14 @@ def XY_register_stacks(stacks,h,fileStruct,save=False):
         save_registered_stacks(imgsXYreg,name,fileStruct)
     return imgsXYreg
         
-def YZ_register_stacks(stacks,h,fileStruct,save=True):
+def YZ_register_stacks(stacks,h,fileStruct,upsampling=4,save=True):
     print('Registering stacks in YZ...')
     imgsReg = 0*stacks
     height,width = stacks[0,...,0].shape
     for i in tqdm( range(stacks.shape[-1]) ):
         for j in range(len(h)):
-            tmp = resize_array(stacks[j,...,i])
-            imgsReg[j,...,i] = cv2.warpPerspective(tmp,h[j],(width,4*height))[::4]
+            tmp = resize_array(stacks[j,...,i],upsampling=upsampling)
+            imgsReg[j,...,i] = cv2.warpPerspective(tmp,h[j],(width,upsampling*height))[::upsampling]
     if save:
         print('\nSaving YZ-registered stacks...')
         name = (fileStruct.split('/')[-1].split('.')[0]+'_YZ.tif')
@@ -324,7 +324,7 @@ def compute_MIP_YZ(stacks, axID, fileStruct,
     h = compute_homography(matches,kps)
     del mips,kps,descs,matches
     save_homography(h,'YZ_homography.npz',fileStruct)
-    regStack = YZ_register_stacks(stacks,h,fileStruct,save)
+    regStack = YZ_register_stacks(stacks,h,fileStruct,save,upsampling)
     return regStack
 
 def register_data(fileStruct, shape,
@@ -338,11 +338,12 @@ def register_data(fileStruct, shape,
 #%%
     
 if __name__=='__main__':
-    fileStructs = [ 'testSample/ch*_ill00.raw' ]
+    fileStructs = [ 'testSample/ch*_ill00.tif' ]
     
     for fileStruct in fileStructs:
         print('\nSOURCE FOLDER:\n'+fileStruct+'\n')
-        raw,reg=register_data(fileStruct,shape=(200,2048,2048),checkMemXY=False,checkMemYZ=False)
+        raw,reg=register_data( fileStruct, shape=(200,2048,2048),
+                              checkMemXY=False, checkMemYZ=False )
 
 
 
