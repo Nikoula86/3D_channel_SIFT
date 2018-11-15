@@ -336,22 +336,13 @@ def register_data(fileStruct, shape,
     return (rawData, regData)
 
 #%%
-fileStructs = [ 'testSample/ch*_ill00.raw' ]
-
-fileStructs = [
-#            '/mnt/isilon/Nicola/Images/20181109_kdrl_stains/fish01/ch*_ill00.raw',
-#            '/mnt/isilon/Nicola/Images/20181109_kdrl_stains/fish01/ch*_ill01.raw',
-#            '/mnt/isilon/Nicola/Images/20181109_kdrl_stains/fish02/ch*_ill00.raw',
-#            '/mnt/isilon/Nicola/Images/20181109_kdrl_stains/fish02/ch*_ill01.raw',
-#            '/mnt/isilon/Nicola/Images/20181109_kdrl_stains/fish03/ch*_ill00.raw',
-#            '/mnt/isilon/Nicola/Images/20181109_kdrl_stains/fish03/ch*_ill01.raw',
-#            '/mnt/isilon/Nicola/Images/20181109_kdrl_stains/fish04/ch*_ill00.raw',
-            '/mnt/isilon/Nicola/Images/20181109_kdrl_stains/fish04/ch*_ill01.raw'
-            ]
-
-for fileStruct in fileStructs:
-    print('\nSOURCE FOLDER:\n'+fileStruct+'\n')
-    raw,reg=register_data(fileStruct,shape=(200,2048,2048),checkMemXY=False,checkMemYZ=False)
+    
+if __name__=='__main__':
+    fileStructs = [ 'testSample/ch*_ill00.raw' ]
+    
+    for fileStruct in fileStructs:
+        print('\nSOURCE FOLDER:\n'+fileStruct+'\n')
+        raw,reg=register_data(fileStruct,shape=(200,2048,2048),checkMemXY=False,checkMemYZ=False)
 
 
 
