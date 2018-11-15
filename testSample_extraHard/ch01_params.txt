@@ -1,0 +1,39 @@
+8437760:ImageSizeBytes
+Mono16:PixelEncoding
+4120:ROIStride
+2048:ROIWidth
+2048:ROIHeight
+0.050000:Exposure Time /s
+19.997440:Frame Rate /Hz
+Rolling:Shutter
+TRUE:Overlap Mode
+6.525804	0.000000	0.000000	0.000000	0.000000
+:x Positions /mm
+3.395298	0.000000	0.000000	0.000000	0.000000
+:y Positions /mm
+2.830099	0.000000	0.000000	0.000000	0.000000
+:z Start Positions /mm
+3.330099	0.000000	0.000000	0.000000	0.000000
+:z End Positions /mm
+259.975600	0.000000	0.000000	0.000000	0.000000
+:z Angles /mm
+200:Planes
+2.512563:Plane Spacing /$mu$m
+10.001280:Stack Duration /s
+0.049994:Stack Velocity /mm/s
+2.000000:dt Stack /s
+0.000000:Total time /hrs
+0.000000:405 nm Power /percent
+FALSE:405 nm Filter
+0.000000:488 nm Power /percent
+525/50 bp:488 nm Filter
+20.454545:561 nm Power /percent
+525/50 bp:561 nm Filter
+0.000000:640 nm Power /percent
+647 lp:640 nm Filter
+0:785 nm Power /mA
+647 lp:785 nm Filter
+0:808 nm Power /mW
+845/55 bp: 808 nm Filter
+TRUE:Right ill.?
+TRUE:Left ill.?
