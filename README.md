@@ -27,3 +27,5 @@ raw,reg=register_data( fileStruct, shape=(200,2048,2048),
                        supsampling=4 )
 
 ```
+
+The Jupyter Notebook ```testSIFT.ipynb``` contains a working example on how to use the functions in ```registration_lib.py```
