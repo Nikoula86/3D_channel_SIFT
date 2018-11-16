@@ -112,7 +112,7 @@ def renormalize(instack,perc=99.7,checkMem=True,visual=False):
     if checkMem:
         check_mem(outstack)
     if visual:
-        fig,ax = plt.subplots(figsize=(12,12),nrows=int(outstack.shape[0]/2)+1,ncols=2)
+        fig,ax = plt.subplots(figsize=(outstack.shape[0]*6,6),nrows=1,ncols=outstack.shape[0])
         fig.suptitle('Renormalized MIPs')
         ax = ax.flatten()
         ch = ['ch%02d'%i for i in range(instack.shape[0])]
@@ -189,7 +189,7 @@ def compute_features(instack,visual=False):
         kp[i], desc[i] = gen_sift_features(instack[i])
         
     if visual:
-        fig,ax = plt.subplots(figsize=(12,12),nrows=int(instack.shape[0]/2)+1,ncols=2)
+        fig,ax = plt.subplots(figsize=(instack.shape[0]*6,6),nrows=1,ncols=instack.shape[0])
         fig.suptitle('Detected features in every MIPS')
         ax = ax.flatten()
         ch = ['ch%02d'%i for i in range(instack.shape[0])]
@@ -225,10 +225,10 @@ def match_features(instack,kps,descs,N=25,visual=False):
         matches[i] = m[:N]
     
     if visual:
-        fig,ax = plt.subplots(figsize=(6,12),nrows=instack.shape[0],ncols=1)
+        fig,ax = plt.subplots(figsize=(6,instack.shape[0]*3),nrows=instack.shape[0],ncols=1)
         fig.suptitle('Matching features')
         ax = ax.flatten()
-        ch = ['ch%02d'%i for i in range(instack.shape[0])]
+        ch = ['ch00-ch%02d'%i for i in range(instack.shape[0])]
         for i in range(instack.shape[0]):
             img = cv2.drawMatches(instack[0],kps[0],instack[i],kps[i],matches[i],instack[i].copy(),flags=2)
             ax[i].imshow(img)
@@ -237,6 +237,20 @@ def match_features(instack,kps,descs,N=25,visual=False):
     return matches
 
 def compute_homography(matches,kps):
+    '''Compute the image transformation to register the corresponding images.
+    
+    This function always uses the first element of the list as reference.
+    I.e. it compute the homography to align channel 1,2... to channel 0.
+    
+    Args:
+        matches (list): matching features.
+        kps (list): keypoints in the images.
+        
+    Returns:
+        h (list): every element contains the 3D array that defines the transformation.
+                  NOTE: h[0] is always the identity matrix.
+    
+    '''
     print('Computing Homography...')
     h = [[]for i in kps]
     mask = [[]for i in kps]
@@ -267,22 +281,71 @@ def save_registered_stacks(stacks,name,path):
     for i in tqdm(range(stacks.shape[0])):
         imsave(basedir+'/'+name%i,stacks[i])
     
-def XY_register_stacks(stacks,h,fileStruct,save=False):
+def XY_register_stacks(stacks,h,fileStruct,save=False,visual=False):
+    ''' XY registration transformation.
+    
+    Args:
+        stacks (nd array): instup nd array. Can be 3D (mip, axID='CXY') 
+                           or 4D (full stack, axID='CZYX'). If 3D, computes the transformation
+                           on every channel. If 4D, computes the transformation on single XY planes.
+        h (list): homography. List of 3x3 numpy arrays.
+        fileStruct (str): input fileStructure. Used in case save=True.
+        save (bool, optional): saving images in subfolder. Default: False.
+        visual (bool, optional): visualize output. Default: False.
+    
+    Returns:
+        imgsXYreg (ndarray): registered images.
+    '''
+    
     print('Registering stacks in XY...')
     imgsXYreg = 0*stacks
-    height,width = stacks[0,0].shape
-    for i in tqdm( range(stacks.shape[1]) ):
+    if len(stacks.shape)==4:
+        height,width = stacks[0,0].shape
+        for i in tqdm( range(stacks.shape[1]) ):
+            for j in range(len(h)):
+                imgsXYreg[j,i] = cv2.warpPerspective(stacks[j,i],h[j],(width,height))
+    elif len(stacks.shape)==3:
+        height,width = stacks[0].shape
         for j in range(len(h)):
-            imgsXYreg[j,i] = cv2.warpPerspective(stacks[j,i],h[j],(width,height))
+            imgsXYreg[j] = cv2.warpPerspective(stacks[j],h[j],(width,height))
     if save:
         print('\nSaving XY-registered stacks...')
         name = (fileStruct.split('/')[-1].split('.')[0]+'_XY.tif')
         name = name.replace('*','%02d')
         print(name)
         save_registered_stacks(imgsXYreg,name,fileStruct)
+    if visual:
+        fig,ax = plt.subplots(figsize=(imgsXYreg.shape[0]*6,6),nrows=1,ncols=imgsXYreg.shape[0])
+        ax = ax.flatten()
+        ch = ['ch%02d'%i for i in range(stacks.shape[0])]
+        if len(imgsXYreg.shape)==4:
+            fig.suptitle('XY registered images - single plane in the middle of the stack')
+            plotImg = imgsXYreg[:,int(imgsXYreg.shape[1]/2),...]
+        if len(imgsXYreg.shape)==3:
+            fig.suptitle('XY registered MIP')
+            plotImg = imgsXYreg
+        for i in range(plotImg.shape[0]):
+            ax[i].imshow(plotImg[i],cmap='gray')
+            ax[i].set_xlabel(ch[i])
+        plt.show()
     return imgsXYreg
         
-def YZ_register_stacks(stacks,h,fileStruct,upsampling=4,save=True):
+def YZ_register_stacks(stacks,h,fileStruct,upsampling=4,save=True, visual=False):
+    ''' YZ registration transformation.
+    
+    Args:
+        stacks (nd array): instup nd array. Can be 3D (mip, axID='CYZ') 
+                           or 4D (full stack, axID='CZYX'). If 3D, computes the transformation
+                           on every channel. If 4D, computes the transformation on single YZ planes.
+        h (list): homography. List of 3x3 numpy arrays.
+        fileStruct (str): input fileStructure. Used in case save=True.
+        upsampling (int): Z upsampling factor.
+        save (bool, optional): saving images in subfolder. Default: False.
+        visual (bool, optional): visualize output. Default: False.
+    
+    Returns:
+        imgsYZreg (ndarray): registered images.
+    '''
     print('Registering stacks in YZ...')
     imgsReg = 0*stacks
     if len(stacks.shape)==4:
@@ -291,7 +354,7 @@ def YZ_register_stacks(stacks,h,fileStruct,upsampling=4,save=True):
             for j in range(len(h)):
                 tmp = resize_array(stacks[j,...,i],upsampling=upsampling)
                 imgsReg[j,...,i] = cv2.warpPerspective(tmp,h[j],(width,upsampling*height))[::upsampling]
-    elif(len(stacks.shape)==3):
+    elif len(stacks.shape)==3:
         height,width = stacks[0,...].shape        
         for j in range(len(h)):
             tmp = resize_array(stacks[j,...],upsampling=upsampling)
@@ -302,8 +365,22 @@ def YZ_register_stacks(stacks,h,fileStruct,upsampling=4,save=True):
         name = name.replace('*','%02d')
         print(name)
         save_registered_stacks(imgsReg,name,fileStruct)
+    if visual:
+        fig,ax = plt.subplots(figsize=(6,imgsReg.shape[1]*imgsReg.shape[0]*6*2/imgsReg.shape[2]),
+                              nrows=imgsReg.shape[0],ncols=1)
+        ax = ax.flatten()
+        ch = ['ch%02d'%i for i in range(imgsReg.shape[0])]
+        if len(imgsReg.shape)==4:
+            fig.suptitle('YZ registered images - single plane in the middle of the stack')
+            plotImg = imgsReg[:,...,int(imgsReg.shape[2]/2)]
+        if len(imgsReg.shape)==3:
+            fig.suptitle('YZ registered MIP')
+            plotImg = imgsReg
+        for i in range(plotImg.shape[0]):
+            ax[i].imshow(plotImg[i],cmap='gray')
+            ax[i].set_xlabel(ch[i])
+        plt.show()
     return imgsReg
-        
   
 #%%
 def compute_MIP_XY(stacks, axID, fileStruct,
