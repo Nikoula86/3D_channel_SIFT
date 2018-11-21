@@ -33,7 +33,10 @@ def load_images(fileTemplate,shape):
     print('Files detected: ',len(fList))
     if '.raw' in fileTemplate:
         print('Files format: .raw, loading data...')
-        imgs = np.stack( [ np.reshape(np.frombuffer(open(i,'rb').read(),np.uint16)[:np.prod(shape)],shape) for i in tqdm(fList) ] )
+        with open(i,'rb') as fn:
+	  imgs = np.fromfile(fn,dtype=np.uint16)
+	  imgs = np.stack([ imgs[(np.prod(shape[1:])+2)*i:(np.prod(shape[1:])+2)*(i+1)] for i in range(shape[0])])
+	  imgs = np.stack([ i[2:].reshape(shape[1:]) for i in imgs ])
     elif '.tif'in fileTemplate:
         print('Files format: .tif, loading data...')
         imgs = np.stack( [ imread(i) for i in tqdm(fList) ] )
@@ -109,6 +112,7 @@ def renormalize(instack,perc=99.7,checkMem=True,visual=False):
         outstack[i] = np.clip(instack[i],_min,_max)
         outstack[i] = (2**8-1) * ((outstack[i]-_min)/(_max-_min))
     outstack = outstack.astype(np.uint8)
+    
     if checkMem:
         check_mem(outstack)
     if visual:
